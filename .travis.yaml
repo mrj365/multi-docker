@@ -1,0 +1,23 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t flamingoshore/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true flamingoshore/react-test npm test
+
+after_success: 
+  - docker build -t flamingoshore/multi-client ./client
+  - docker build -t flamingoshore/multi-nginx ./nginx
+  - docker build -t flamingoshore/multi-server ./server
+  - docker build -t flamingoshore/multi-worker ./worker
+  # Log in to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take images and push to dockerhub
+  - docker push flamingoshore/multi-client
+  - docker push flamingoshore/multi-nginx
+  - docker push flamingoshore/multi-server
+  - docker push flamingoshore/multi-worker
+
